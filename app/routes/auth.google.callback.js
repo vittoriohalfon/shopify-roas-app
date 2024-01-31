@@ -1,21 +1,24 @@
 import { google } from 'google-auth-library';
-import { json } from '@remix-run/node';
-import { useSearchParams } from '@remix-run/react';
+import { redirect } from '@remix-run/node';
 
 export let action = async ({ request }) => {
-  const [searchParams] = useSearchParams();
-  const code = searchParams.get('code');
-  
-  const client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
-  );
+    const formData = await request.formData();
+    const code = formData.get('code');
+    
+    const client = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI
+    );
+    
+    const { tokens } = await client.getToken(code);
 
-  const { tokens } = await client.getToken(code);
-  client.setCredentials(tokens);
+    const headers = new Headers({
+        'Set-Cookie': [
+            `access_token=${tokens.access_token}; HttpOnly; Secure; SameSite=Strict`,
+            `refresh_token=${tokens.refresh_token}; HttpOnly; Secure; SameSite=Strict`
+        ],
+    });
 
-  // Here we'll save the tokens securely (associated with the user's session)
-
-  return json({ success: true });
+    return redirect('/path-to-redirect-to-after-auth', { headers });
 };
