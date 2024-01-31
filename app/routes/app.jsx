@@ -22,11 +22,17 @@ export default function App() {
         <Link to="/app" rel="home">
           Home
         </Link>
-        <Link to="/app/additional">Additional page</Link>
+        <Link to="/app/additional">
+          Additional page
+        </Link>
+        <Link to="/auth/google">
+          Connect to Google Ads
+        </Link>
       </ui-nav-menu>
       <Outlet />
     </AppProvider>
   );
+  
 }
 
 // Shopify needs Remix to catch some thrown responses, so that their headers are included in the response.
