@@ -4,6 +4,17 @@ import { redirect } from '@remix-run/node';
 export let action = async ({ request }) => {
     const formData = await request.formData();
     const code = formData.get('code');
+    const state = formData.get('state');
+
+    //Retrieve state from cookie
+    const cookieHeader = request.headers.get('Cookie');
+    const cookies = cookieHeader ? new Map(cookieHeader.split(';').map((c) => c.trim().split('='))) : new Map();
+    const storedState = cookies.get('state');
+
+    // Check if the state returned by Google matches the one we stored
+    if (!storedState || storedState !== state) {
+        throw new Error('Invalid state parameter');
+    }
     
     const client = new google.auth.OAuth2(
         process.env.GOOGLE_CLIENT_ID,
@@ -15,8 +26,8 @@ export let action = async ({ request }) => {
 
     const headers = new Headers({
         'Set-Cookie': [
-            `access_token=${tokens.access_token}; HttpOnly; Secure; SameSite=Strict`,
-            `refresh_token=${tokens.refresh_token}; HttpOnly; Secure; SameSite=Strict`
+            `access_token=${tokens.access_token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`,
+            `refresh_token=${tokens.refresh_token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=604800` // 1 week
         ],
     });
 
